@@ -37,6 +37,8 @@ int textLength, totalPixels;
 // Initialize char array for text string
 byte text[MAX_TEXT_LENGTH];
 
+void getLength(byte* charArray, int* lengthPtr, int* pixelPtr) ;
+void getNewText(unsigned char* charArray) ;
 void setup() {
   Serial.begin(9600);
   LedSign::Init();
@@ -62,6 +64,7 @@ void testcharset() {
     LedSign::Set(13,0,(x&1));
     delay(100);
   }
+}
 
 void loop() {
   // Read text from serial and determine the length

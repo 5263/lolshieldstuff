@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import cPickle
+#import cPickle
 
 def fontshitcharstoright(charlst):
-    '''shifts characters to the left to allow the display lib
+    '''shifts characters to the left to allow the display routine
     to remove whitespace on the right
     warning: modifies the charaters in place'''
     for singlecharlst in charlst:
@@ -14,15 +14,28 @@ def fontshitcharstoright(charlst):
             else:
                 break
 
-def createfontfromimage():
+def createfontfromimage(filename='a02-mono-18.pbm',debug=False):
+    '''Takes an Image of table 4 from the HD44780U data sheet
+    The image was created using
+    'pdftoppm -f 18 -l 18 -r 300 -mono HD44780.pdf a02-mono'
+    Curently the coordinates are hardcoded
+
+    The function returns a list of lists of integers.
+    Each integer represents a column of eight pixels.
+    Each inner list represents a character consisting of five columns.
+    The outer list has 256 characters.
+    '''
+
     import Image
-    img=Image.open('a02-cut.pbm')
-    debugimg=img.copy().convert('RGB')
+    img=Image.open(filename)
+    if debug:
+        debugimg=img.copy().convert('RGB')
     charlst=[]
     for charnum in xrange(256):
-        xcell=int(1502/15.0*(charnum >> 4))
-        ycell=int(1916/15.0*(charnum & 15))
-    #    print charnum,xcell,ycell
+        xcell=int(1502/15.0*(charnum >> 4)+530)
+        ycell=int(1916/15.0*(charnum & 15)+621)
+        if debug:
+            print charnum,xcell,ycell
         singlecharlst=[]
         for x in range(5):
             xcoord=xcell+18+int((x+0.5)*(79+1-18)/(5.0))
@@ -30,16 +43,21 @@ def createfontfromimage():
             for y in xrange(8):
                 ycoord=ycell+int((y+0.5)*(100/8.0))
                 value=(img.getpixel((xcoord,ycoord)) & 1) ^ 1
-                debugimg.putpixel((xcoord,ycoord),(255,0,0))
+                if debug:
+                    debugimg.putpixel((xcoord,ycoord),(255,0,0))
                 bitfield += value << y
             singlecharlst.append(bitfield)
         charlst.append(singlecharlst)
-    debugimg.save('debug.png')
-#    pf=open('a02.pickle','wb')
-#    cPickle.dump(charlst,pf)
-#    pf.close()
+    if debug:
+        debugimg.save('debug-fontfromimage.png')
 
 def createfont(charlst1,charlst2,charlst1min,charlst2min):
+    '''Creates a font for the charlieplexing lolshield.
+    Returns the contens of Font.cpp as a string.
+    Takes two subsets of a charset and their offsets.
+    To create a font from a full charset slice it into two parts, i.e.
+    createfont(charlst[0:16],charlst[16:256],0,16)
+    '''
     def encodechars(charlst):
         #'{ 0x00, 0x00, 0x00, 0x00, 0x00 },'
         return ',\n'.join([ '{ %s }' % ', '.join([hex(bitfield) \
@@ -177,8 +195,8 @@ uint8_t Font::Draw90(uint16_t letter,int x,int y,int set) {
 		  if ( j > maxx ){
 		    maxx = j;
 		  }
-		  if ( (j+x+1)<14 && (j+x+1)>=0 ){
-		    LedSign::Set(j+x+1, 6-i+y, set);
+		  if ( (j+x)<14 && (j+x)>=0 ){
+		    LedSign::Set(j+x, 6-i+y, set);
 		  }
 		}
 	  }
@@ -189,12 +207,14 @@ uint8_t Font::Draw90(uint16_t letter,int x,int y,int set) {
 '''
     return fontcppformat % formatoptions
 
-def writefontfile(charlst):
-    outfile=open('Font-a02.cpp','w')
+def writefontfile(charlst=None):
+    if not charlst:
+        charlst= createfontfromimage()
+    outfile=open('Font.cpp','w')
     outfile.write(createfont(charlst[0:16],charlst[16:256],0,16))
     outfile.close()
 
-charlst=cPickle.load(file('a02.pickle','rb'))
+#charlst=cPickle.load(file('a02.pickle','rb'))
 #fontshitcharstoright(charlst)
 #def writefontfile(charlst):
 

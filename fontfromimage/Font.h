@@ -5,6 +5,9 @@
   
   History:
   	2010-01-01 - V0.0 Initial code at Berlin after 26C3
+  	2011-08-23 - lamer had to mofify the integer types to make
+  			the header compatible to ikkei's Font.cpp
+
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public

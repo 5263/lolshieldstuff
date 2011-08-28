@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# please notice the LGPL notice included below
 #import cPickle
 
 def fontshitcharstoright(charlst):
@@ -214,6 +215,43 @@ def writefontfile(charlst=None):
     outfile.write(createfont(charlst[0:16],charlst[16:256],0,16))
     outfile.close()
 
+def cellcoordinates(charnum):
+    return 6*(charnum >> 4),9*(charnum & 15)
+
+def writefonttoimage(charlst,filename='font.png'):
+    import Image
+    outimage=Image.new('L',(6*16,9*16),128)
+    outimagel=outimage.load()
+    for charnum in xrange(256):
+        singlecharlst=charlst[charnum]
+        xcell,ycell=cellcoordinates(charnum)
+        #outimagel[xcell+5,ycell+8]=0
+        for column in xrange(5):
+            bitfield = singlecharlst[column]
+            for row in xrange(8):
+                outimagel[xcell+column,ycell+row]=(((bitfield>>row)&1)^1)*255
+    outimage.save(filename)
+    
+def readfontfromimage(filename='font.png'):
+    import Image
+    inimage=Image.open(filename)
+    inimagel=inimage.load()
+    charlst=[]
+    for charnum in xrange(256):
+        xcell,ycell=cellcoordinates(charnum)
+        #outimagel[xcell+5,ycell+8]=0
+        singlecharlst=[]
+        for column in xrange(5):
+            bitfield = 0
+            for row in xrange(8):
+                bitfield+=((inimagel[xcell+column,ycell+row]&1)^1)<<row
+            singlecharlst.append(bitfield)
+        charlst.append(singlecharlst)
+    return charlst       
+            
+    
+    
+    
 #charlst=cPickle.load(file('a02.pickle','rb'))
 #fontshitcharstoright(charlst)
 #def writefontfile(charlst):

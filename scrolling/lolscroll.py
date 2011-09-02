@@ -19,13 +19,15 @@ class Lolscroll:
 
     def write(self,str1):
         for part in group(str1,16):
-            while self.getbufferstatus() < len(part):
+            time.sleep(0.05)
+            while self.getbufferstatus() < 128:
                 time.sleep(0.1)
+            #print part
             self.port.write(part.encode('latin1','replace'))
 
 if __name__ == '__main__':
     lolscroll=Lolscroll()
     while True:
-        lolscroll.write(raw_input().decode('utf8'))
+        lolscroll.write('%s\x17 '%raw_input().decode('utf8'))
 
 
